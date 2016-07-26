@@ -29,7 +29,7 @@ const authenticate = expressJwt({
 passport.use(new Strategy(
   function (username, password, done) {
     if (!module.parent) {
-      console.debug('authenticating %s:%s', username, password)
+      console.log('authenticating %s:%s', username, password)
     }
     User.findOne({ 'alias': username }, function (err, user) {
       if (err) return done(err, false)
@@ -48,7 +48,7 @@ passport.use(new Strategy(
                 return done(err, false)
               }
 
-              console.debug('default user created. user:%s passwd: %s', DEFAULTUSER, DEFAULTPASSWD)
+              console.log('default user created. user:%s passwd: %s', DEFAULTUSER, DEFAULTPASSWD)
               user.comparePassword(password, function (err, isMatch) {
                 if (err) return done(err, false)
                 if (isMatch) return done(null, user)
