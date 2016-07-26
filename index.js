@@ -18,6 +18,7 @@ const mongoose = require('mongoose')
 mongoose.connect(MONGODB)
 
 const User = require('./models/user')
+const Plant = require('./models/plant')
 
 const app = express()
 
@@ -126,8 +127,37 @@ function respond (req, res) {
 }
 
 require('./controllers/user')(router, authenticate)
+require('./controllers/plant')(router, authenticate)
 
 router.get('/test', authenticate, function (req, res) {
+  res.status(200).json({
+    hello: 'world'
+  })
+})
+
+router.get('/create-plant', authenticate, function (req, res, done) {
+  
+
+  Plant.findOne({ 'species': "Ocimum Lamiaceae" }, function (err, plant) {
+      if (err) return done(err, false)
+      if (!plant) {
+        plant = new Plant()
+        plant.name = "Manjericão"
+        plant.species = "Ocimum Lamiaceae"
+        plant.nickname = "Manjericão"
+        plant.size = "pequeno"
+
+        plant.save(function (err) {
+          if (err) {
+            console.log(err)
+            return done(err, false)
+          }
+
+          console.log('default plant created')
+        })
+      }
+  })
+
   res.status(200).json({
     hello: 'world'
   })

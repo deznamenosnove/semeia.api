@@ -18,7 +18,7 @@ module.exports = function (router, requestAuth) {
       })
     })
     .get(requestAuth, function (req, res) {
-      plant.find(function (err, plants) {
+      Plant.find(function (err, plants) {
         if (err) {
           res.send(err)
         } else {
@@ -27,9 +27,9 @@ module.exports = function (router, requestAuth) {
       })
     })
 
-  router.route('/plant/:plant_id')
+  router.route('/plants/:plant_id')
     .get(requestAuth, function (req, res) {
-      plant.findById(req.params.plant_id, function (err, plant) {
+      Plant.findById(req.params.plant_id, function (err, plant) {
         if (err) {
           res.send(err)
         } else {
@@ -38,7 +38,7 @@ module.exports = function (router, requestAuth) {
       })
     })
     .put(requestAuth, function (req, res) {
-      plant.findById(req.params.plant_id, function (err, plant) {
+      Plant.findById(req.params.plant_id, function (err, plant) {
         if (err) {
           res.send(err)
         } else {
@@ -58,7 +58,7 @@ module.exports = function (router, requestAuth) {
       })
     })
     .delete(requestAuth, function (req, res) {
-      plant.remove({
+      Plant.remove({
         _id: req.params.plant_id
       }, function (err, plant) {
         if (err) {
