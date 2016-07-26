@@ -1,0 +1,16 @@
+{
+  "name": "semeia.ai",
+  "version": "1.0.0",
+  "description": "api do projeto semeia.ai ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "semeia",
+    "ai",
+    "semeia.ai"
+  ],
+  "author": "fumas & nano",
+  "license": "Beerware"
+}
