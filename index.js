@@ -14,10 +14,12 @@ const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const Strategy = require('passport-local')
 const mongoose = require('mongoose')
+const uuid = require('node-uuid')
 
 mongoose.connect(MONGODB)
 
 const User = require('./models/user')
+const Device = require('./models/device')
 
 const app = express()
 
@@ -25,6 +27,23 @@ const authenticate = expressJwt({
   secret: SECRET,
   credentialsRequired: false
 })
+
+const respond = {
+  auth: function (req, res) {
+    res.status(200).json({
+      user: req.user,
+      token: req.token
+    })
+  },
+  token: function (req, res) {
+    res.status(201).json({
+      token: req.token
+    })
+  },
+  reject: function (req, res) {
+    res.status(204).end()
+  }
+}
 
 passport.use(new Strategy(
   function (username, password, done) {
@@ -94,11 +113,12 @@ router.post('/auth', passport.initialize(), passport.authenticate(
   'local', {
     session: false,
     scope: []
-  }), serialize, generateToken, respond)
+  }), serializeUser, serializeDevice, generateAccessToken, generateRefreshToken, respond.auth)
 
-function serialize (req, res, next) {
+function serializeUser (req, res, next) {
   User.findOne({ 'alias': req.body.username }, function (err, user) {
     if (err) {
+      console.error(err)
       return next(err)
     }
 
@@ -109,29 +129,112 @@ function serialize (req, res, next) {
   })
 }
 
-function generateToken (req, res, next) {
-  req.token = jwt.sign({
-    id: req.user.id
+function serializeDevice (req, res, next) {
+  if (req.query.permanent === 'true') {
+    Device.findOne({
+      alias: req.body.alias
+    }, function (err, device) {
+      if (err) {
+        console.error(err)
+        return next(err)
+      }
+      if (device === null) {
+        device = new Device()
+        device.alias = req.body.alias
+        device.user = req.user.id
+
+        device.save(function (err) {
+          if (err) {
+            console.error('erro', err)
+            return next(err)
+          }
+
+          console.log('device registered: %s', req.body.alias)
+          req.user.deviceId = device._id
+          next()
+        })
+      } else {
+        req.user.deviceId = device._id
+        next()
+      }
+    })
+  } else {
+    next()
+  }
+}
+
+function generateAccessToken (req, res, next) {
+  req.token = req.token || {}
+  req.token.accessToken = jwt.sign({
+    id: req.user.id,
+    deviceId: req.user.deviceId
   }, SECRET, {
     expiresIn: TOKENTIME
   })
   next()
 }
 
-function respond (req, res) {
-  res.status(200).json({
-    user: req.user,
-    token: req.token
+function generateRefreshToken (req, res, next) {
+  if (req.query.permanent === 'true') {
+    req.token.refreshToken = req.user.deviceId.toString() + '.' + uuid.v4()
+    Device.findOne({
+      '_id': req.user.deviceId
+    }, function (err, device) {
+      if (err) {
+        console.error(err)
+        return next(err)
+      }
+      device.refreshToken = req.token.refreshToken
+      device.save(function (err) {
+        if (err) {
+          console.error(err)
+          return next(err)
+        }
+        next()
+      })
+    })
+  } else {
+    next()
+  }
+}
+
+function validateRefreshToken (req, res, next) {
+  Device.findOne({
+    'refreshToken': req.body.refreshToken
+  }, function (err, device) {
+    if (err) {
+      console.error(err)
+      return next(err)
+    }
+    req.user = {
+      id: device.user,
+      deviceId: device.id
+    }
+    next()
+  })
+}
+
+function rejectToken (req, res, next) {
+  Device.remove({
+    'refreshToken': req.body.refreshToken
+  }, function (err) {
+    if (err) {
+      console.error(err)
+      return next(err)
+    }
+    next()
   })
 }
 
 require('./controllers/user')(router, authenticate)
+require('./controllers/device')(router, authenticate)
 
-router.get('/test', authenticate, function (req, res) {
-  res.status(200).json({
-    hello: 'world'
-  })
+router.get('/me', authenticate, function (req, res) {
+  res.status(200).json(req.user)
 })
+
+router.post('/token', validateRefreshToken, generateAccessToken, respond.token)
+router.post('/token/reject', rejectToken, respond.reject)
 
 app.use('/', router)
 
