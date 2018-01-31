@@ -1,7 +1,7 @@
 const Plant = require('./../models/plant')
 
 module.exports = function (router, requestAuth) {
-  router.route('/plant')
+  router.route('/plants')
     .post(requestAuth, function (req, res) {
       var plant = new Plant()
       plant.name = req.body.name
@@ -18,13 +18,15 @@ module.exports = function (router, requestAuth) {
       })
     })
     .get(requestAuth, function (req, res) {
+      var sort = 'name';
+      if(req.query.sort) sort = req.query.sort;
       Plant.find(function (err, plants) {
         if (err) {
           res.send(err)
         } else {
           res.json(plants)
         }
-      })
+      }).sort(sort);
     })
 
   router.route('/plants/:plant_id')
