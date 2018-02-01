@@ -16,13 +16,17 @@ module.exports = function (router, requestAuth) {
       })
     })
     .get(requestAuth, function (req, res) {
+      var limit = (req.query.limit) ? parseInt(req.query.limit) : 10;
+      var skip = (req.query.skip) ? parseInt(req.query.skip) : 0;
+      var sort = (req.query.sort) ? req.query.sort : 'name';
+      
       Device.find(function (err, devices) {
         if (err) {
           res.send(err)
         } else {
           res.json(devices)
         }
-      })
+      }).sort(sort).limit(limit).skip(skip);
     })
 
   router.route('/devices/:device_id')

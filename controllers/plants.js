@@ -18,24 +18,17 @@ module.exports = function (router, requestAuth) {
       })
     })
     .get(requestAuth, function (req, res) {
-      var limit = 20;
-      var skip = 0;
-      var sort = 'name';
-      if(req.query.sort) sort = req.query.sort;
+      var limit = (req.query.limit) ? parseInt(req.query.limit) : 10;
+      var skip = (req.query.skip) ? parseInt(req.query.skip) : 0;
+      var sort = (req.query.sort) ? req.query.sort : 'name';
       
-      var options = {
-          "limit": limit,
-          "skip": skip,
-          "sort": sort
-      }
-
       Plant.find(function (err, plants) {
         if (err) {
           res.send(err)
         } else {
           res.json(plants)
         }
-      }, options);
+      }).sort(sort).limit(limit).skip(skip);
     })
 
   router.route('/plants/:plant_id')

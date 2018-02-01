@@ -18,7 +18,7 @@ module.exports = function (router, requestAuth) {
       })
     })
     .get(requestAuth, function (req, res) {
-      var limit = (req.query.limit) ? parseInt(req.query.limit) : 1;
+      var limit = (req.query.limit) ? parseInt(req.query.limit) : 10;
       var skip = (req.query.skip) ? parseInt(req.query.skip) : 0;
       var sort = (req.query.sort) ? req.query.sort : 'name';
       
@@ -28,7 +28,7 @@ module.exports = function (router, requestAuth) {
         } else {
           res.json(users)
         }
-      }).sort(sort).limit(limit).skip(skip)
+      }).sort(sort).limit(limit).skip(skip);
     })
 
   router.route('/users/:user_id')

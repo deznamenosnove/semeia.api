@@ -227,9 +227,9 @@ function rejectToken (req, res, next) {
   })
 }
 
-require('./controllers/user')(router, authenticate)
-require('./controllers/plant')(router, authenticate)
-require('./controllers/device')(router, authenticate)
+require('./controllers/users')(router, authenticate)
+require('./controllers/plants')(router, authenticate)
+require('./controllers/devices')(router, authenticate)
 
 router.get('/me', authenticate, function (req, res) {
   res.status(200).json(req.user)
